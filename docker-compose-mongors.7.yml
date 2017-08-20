@@ -1,0 +1,97 @@
+version: '2'
+services:
+     mongors-0-2: 
+        container_name: mongors-0-2 
+        image: mongobuild 
+        ports:
+            - "30202:27017" 
+        command: mongod --replSet rs0 --port 27017 --oplogSize 16 --noprealloc --smallfiles
+        restart: always 
+
+     mongors-0-3:
+        container_name: mongors-0-3
+        image: mongobuild
+        ports:
+            - "30203:27017"
+        command: mongod --replSet rs0 --port 27017  --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+     mongors-0-4:
+        container_name: mongors-0-4
+        image: mongobuild
+        ports:
+            - "30204:27017"
+        command: mongod --replSet rs0 --port 27017 --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+     mongors-0-5:
+        container_name: mongors-0-5
+        image: mongobuild
+        ports:
+            - "30205:27017"
+        command: mongod --replSet rs0 --port 27017 --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+     mongors-0-6:
+        container_name: mongors-0-6
+        image: mongobuild
+        ports:
+            - "30206:27017"
+        command: mongod --replSet rs0 --port 27017 --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+     mongors-0-7:
+        container_name: mongors-0-7
+        image: mongobuild
+        ports:
+            - "30207:27017"
+        command: mongod --replSet rs0 --port 27017 --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+     mongors-0-1:
+        container_name: mongors-0-1
+        image: mongobuild
+        ports:
+            - "30201:27017"
+        command: mongod --replSet rs0 --port 27017 --oplogSize 16 --noprealloc --smallfiles
+        links:
+            - mongors-0-2:mongors-0-2
+            - mongors-0-3:mongors-0-3
+            - mongors-0-4:mongors-0-4
+            - mongors-0-5:mongors-0-5
+            - mongors-0-6:mongors-0-6
+            - mongors-0-7:mongors-0-7
+        restart: always
+
+     mongo-rs0-setup:
+        container_name: mongo-rs0-setup
+        image: mongobuild
+        depends_on:
+            - "mongors-0-1"
+            - "mongors-0-2"
+            - "mongors-0-3"
+            - "mongors-0-4"
+            - "mongors-0-5"
+            - "mongors-0-6"
+            - "mongors-0-7"
+
+        links:
+            - mongors-0-1:mongors-0-1
+            - mongors-0-2:mongors-0-2
+            - mongors-0-3:mongors-0-3
+            - mongors-0-4:mongors-0-4
+            - mongors-0-5:mongors-0-5
+            - mongors-0-6:mongors-0-6
+            - mongors-0-7:mongors-0-7
+        volumes:
+            - ./scripts:/scripts
+        environment: 
+            - MONGO1=mongors-0-1
+            - MONGO2=mongors-0-2
+            - MONGO3=mongors-0-3
+            - MONGO4=mongors-0-4
+            - MONGO5=mongors-0-5
+            - MONGO6=mongors-0-6
+            - MONGO7=mongors-0-7
+            - RS=rs0
+        entrypoint: [ "/scripts/setup-rs-7.sh" ]

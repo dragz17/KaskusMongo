@@ -1,0 +1,50 @@
+version: '2'
+services:
+    mongo-22-2:
+        container_name: "mongo-22-2"
+        image: mongobuild
+        ports:
+            - "30068:27017"
+        command: mongod --replSet rs22 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+    mongo-22-3:
+        container_name: "mongo-22-3"
+        image: mongobuild
+        ports:
+            - "30069:27017"
+        command: mongod --replSet rs22 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always 
+
+    mongo-22-1:
+        container_name: "mongo-22-1"
+        image: mongobuild
+        ports:
+            - "30067:27017"
+        command: mongod --replSet rs22 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        links:
+            - mongo-22-2:mongo-22-2
+            - mongo-22-3:mongo-22-3
+        restart: always
+
+    mongo-rs22-setup:
+        container_name: "mongo-rs22-setup"
+        image: mongobuild
+        depends_on:
+            - "mongo-22-1"
+            - "mongo-22-2"
+            - "mongo-22-3"
+        links:
+            - mongo-22-1:mongo-22-1
+            - mongo-22-2:mongo-22-2
+            - mongo-22-3:mongo-22-3
+        volumes:
+            - ./scripts:/scripts
+        environment: 
+            - MONGO1=mongo-22-1
+            - MONGO2=mongo-22-2
+            - MONGO3=mongo-22-3
+            - RS=rs22
+        entrypoint: [ "/scripts/setup.sh" ]
+
+        

@@ -1,0 +1,50 @@
+version: '2'
+services:
+    mongo-8-2:
+        container_name: "mongo-8-2"
+        image: mongobuild
+        ports:
+            - "30026:27017"
+        command: mongod --replSet rs8 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+    mongo-8-3:
+        container_name: "mongo-8-3"
+        image: mongobuild
+        ports:
+            - "30027:27017"
+        command: mongod --replSet rs8 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always 
+
+    mongo-8-1:
+        container_name: "mongo-8-1"
+        image: mongobuild
+        ports:
+            - "30025:27017"
+        command: mongod --replSet rs8 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        links:
+            - mongo-8-2:mongo-8-2
+            - mongo-8-3:mongo-8-3
+        restart: always
+
+    mongo-rs8-setup:
+        container_name: "mongo-rs8-setup"
+        image: mongobuild
+        depends_on:
+            - "mongo-8-1"
+            - "mongo-8-2"
+            - "mongo-8-3"
+        links:
+            - mongo-8-1:mongo-8-1
+            - mongo-8-2:mongo-8-2
+            - mongo-8-3:mongo-8-3
+        volumes:
+            - ./scripts:/scripts
+        environment: 
+            - MONGO1=mongo-8-1
+            - MONGO2=mongo-8-2
+            - MONGO3=mongo-8-3
+            - RS=rs8
+        entrypoint: [ "/scripts/setup.sh" ]
+
+        

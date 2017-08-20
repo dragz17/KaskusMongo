@@ -1,0 +1,51 @@
+version: '2'
+services:
+    mongo-10-2:
+        container_name: "mongo-10-2"
+        image: mongobuild
+        ports:
+            - "30032:27017"
+        command: mongod --replSet rs10 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+    mongo-10-3:
+        container_name: "mongo-10-3"
+        image: mongobuild
+        ports:
+            - "30033:27017"
+        command: mongod --replSet rs10 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always 
+
+    mongo-10-1:
+        container_name: "mongo-10-1"
+        image: mongobuild
+        ports:
+            - "30031:27017"
+        command: mongod --replSet rs10 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        links:
+            - mongo-10-2:mongo-10-2
+            - mongo-10-3:mongo-10-3
+        restart: always
+
+    mongo-rs10-setup:
+        container_name: "mongo-rs10-setup"
+        image: mongobuild
+        depends_on:
+            - "mongo-10-1"
+            - "mongo-10-2"
+            - "mongo-10-3"
+
+        links:
+            - mongo-10-1:mongo-10-1
+            - mongo-10-2:mongo-10-2
+            - mongo-10-3:mongo-10-3
+        volumes:
+            - ./scripts:/scripts
+        environment: 
+            - MONGO1=mongo-10-1
+            - MONGO2=mongo-10-2
+            - MONGO3=mongo-10-3
+            - RS=rs10
+        entrypoint: [ "/scripts/setup.sh" ]
+
+        

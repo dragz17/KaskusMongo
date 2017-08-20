@@ -1,0 +1,50 @@
+version: '2'
+services:
+    mongo-19-2:
+        container_name: "mongo-19-2"
+        image: mongobuild
+        ports:
+            - "30059:27017"
+        command: mongod --replSet rs19 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+    mongo-19-3:
+        container_name: "mongo-19-3"
+        image: mongobuild
+        ports:
+            - "30060:27017"
+        command: mongod --replSet rs19 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always 
+
+    mongo-19-1:
+        container_name: "mongo-19-1"
+        image: mongobuild
+        ports:
+            - "30058:27017"
+        command: mongod --replSet rs19 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        links:
+            - mongo-19-2:mongo-19-2
+            - mongo-19-3:mongo-19-3
+        restart: always
+
+    mongo-rs19-setup:
+        container_name: "mongo-rs19-setup"
+        image: mongobuild
+        depends_on:
+            - "mongo-19-1"
+            - "mongo-19-2"
+            - "mongo-19-3"
+        links:
+            - mongo-19-1:mongo-19-1
+            - mongo-19-2:mongo-19-2
+            - mongo-19-3:mongo-19-3
+        volumes:
+            - ./scripts:/scripts
+        environment: 
+            - MONGO1=mongo-19-1
+            - MONGO2=mongo-19-2
+            - MONGO3=mongo-19-3
+            - RS=rs19
+        entrypoint: [ "/scripts/setup.sh" ]
+
+        

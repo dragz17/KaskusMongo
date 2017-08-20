@@ -1,0 +1,50 @@
+version: '2'
+services:
+    mongo-33-2:
+        container_name: "mongo-33-2"
+        image: mongobuild
+        ports:
+            - "30101:27017"
+        command: mongod --replSet rs33 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+    mongo-33-3:
+        container_name: "mongo-33-3"
+        image: mongobuild
+        ports:
+            - "30102:27017"
+        command: mongod --replSet rs33 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always 
+
+    mongo-33-1:
+        container_name: "mongo-33-1"
+        image: mongobuild
+        ports:
+            - "30100:27017"
+        command: mongod --replSet rs33 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        links:
+            - mongo-33-2:mongo-33-2
+            - mongo-33-3:mongo-33-3
+        restart: always
+
+    mongo-rs33-setup:
+        container_name: "mongo-rs33-setup"
+        image: mongobuild
+        depends_on:
+            - "mongo-33-1"
+            - "mongo-33-2"
+            - "mongo-33-3"
+        links:
+            - mongo-33-1:mongo-33-1
+            - mongo-33-2:mongo-33-2
+            - mongo-33-3:mongo-33-3
+        volumes:
+            - ./scripts:/scripts
+        environment: 
+            - MONGO1=mongo-33-1
+            - MONGO2=mongo-33-2
+            - MONGO3=mongo-33-3
+            - RS=rs33
+        entrypoint: [ "/scripts/setup.sh" ]
+
+        

@@ -1,0 +1,50 @@
+version: '2'
+services:
+    mongo-24-2:
+        container_name: "mongo-24-2"
+        image: mongobuild
+        ports:
+            - "30074:27017"
+        command: mongod --replSet rs24 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+    mongo-24-3:
+        container_name: "mongo-24-3"
+        image: mongobuild
+        ports:
+            - "30075:27017"
+        command: mongod --replSet rs24 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always 
+
+    mongo-24-1:
+        container_name: "mongo-24-1"
+        image: mongobuild
+        ports:
+            - "30073:27017"
+        command: mongod --replSet rs24 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        links:
+            - mongo-24-2:mongo-24-2
+            - mongo-24-3:mongo-24-3
+        restart: always
+
+    mongo-rs24-setup:
+        container_name: "mongo-rs24-setup"
+        image: mongobuild
+        depends_on:
+            - "mongo-24-1"
+            - "mongo-24-2"
+            - "mongo-24-3"
+        links:
+            - mongo-24-1:mongo-24-1
+            - mongo-24-2:mongo-24-2
+            - mongo-24-3:mongo-24-3
+        volumes:
+            - ./scripts:/scripts
+        environment: 
+            - MONGO1=mongo-24-1
+            - MONGO2=mongo-24-2
+            - MONGO3=mongo-24-3
+            - RS=rs24
+        entrypoint: [ "/scripts/setup.sh" ]
+
+        

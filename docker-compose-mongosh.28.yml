@@ -1,0 +1,50 @@
+version: '2'
+services:
+    mongo-28-2:
+        container_name: "mongo-28-2"
+        image: mongobuild
+        ports:
+            - "30086:27017"
+        command: mongod --replSet rs28 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always
+
+    mongo-28-3:
+        container_name: "mongo-28-3"
+        image: mongobuild
+        ports:
+            - "30087:27017"
+        command: mongod --replSet rs28 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        restart: always 
+
+    mongo-28-1:
+        container_name: "mongo-28-1"
+        image: mongobuild
+        ports:
+            - "30085:27017"
+        command: mongod --replSet rs28 --shardsvr --port 27017 --nojournal --oplogSize 16 --noprealloc --smallfiles
+        links:
+            - mongo-28-2:mongo-28-2
+            - mongo-28-3:mongo-28-3
+        restart: always
+
+    mongo-rs28-setup:
+        container_name: "mongo-rs28-setup"
+        image: mongobuild
+        depends_on:
+            - "mongo-28-1"
+            - "mongo-28-2"
+            - "mongo-28-3"
+        links:
+            - mongo-28-1:mongo-28-1
+            - mongo-28-2:mongo-28-2
+            - mongo-28-3:mongo-28-3
+        volumes:
+            - ./scripts:/scripts
+        environment: 
+            - MONGO1=mongo-28-1
+            - MONGO2=mongo-28-2
+            - MONGO3=mongo-28-3
+            - RS=rs28
+        entrypoint: [ "/scripts/setup.sh" ]
+
+        
